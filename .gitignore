@@ -1,0 +1,37 @@
+# Claude Artifacts bundler — 2MB source artifact kept locally only.
+# The extracted prototype lives at .planning/research/prototype_extracted.html
+# and is the visual source of truth for the repo.
+Painel_VitaSkin__offline_.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Chaves de API locais — NUNCA commitar
+# Copie js/config.example.js → js/config.local.js e preencha as chaves.
+js/config.local.js
+
+# Local Netlify folder
+.netlify
+
+# === Limpeza para repositorio publico ===
+# Versao offline com chaves Supabase embutidas - NAO versionar
+Painel_VitaSkin__offline_.html
+# Ferramentas internas de dev / IA
+.claude/
+.planning/
+.netlify/
+_ul/
+AGENTS.md
+CLAUDE.md
+BRIEFING_ANTIGRAVITY.md
+HANDOFF.md
+*.code-workspace
+Thumbs.db
+.DS_Store

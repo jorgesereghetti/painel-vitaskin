@@ -1,0 +1,179 @@
+/* layout.css — utility layer vanilla (subset Tailwind-compat) + estrutura macro
+ * Per D-02 (CONTEXT.md): nomes idênticos a Tailwind para legibilidade do markup,
+ *                       sem dependência de runtime Tailwind.
+ * Componentes (.card, .pill, .vt-table, .seg-btn, .nav-item, .page, .side-panel,
+ * .skeleton, .glass-panel, etc.) ficam EXCLUSIVAMENTE em components.css.
+ * Specificity guard: NENHUMA regra que case .nav-item aqui — todas as propriedades
+ * base do .nav-item ficam em components.css para que .nav-item.active vença por
+ * source order.
+ */
+
+/* === Display === */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-1 { flex: 1; }
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.hidden { display: none; }
+
+/* === Spacing (gap/padding/margin) === */
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+.gap-8 { gap: 32px; }
+
+.px-6 { padding-left: 24px; padding-right: 24px; }
+.px-8 { padding-left: 32px; padding-right: 32px; }
+.px-10 { padding-left: 40px; padding-right: 40px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-5 { padding-top: 20px; padding-bottom: 20px; }
+.py-6 { padding-top: 24px; padding-bottom: 24px; }
+.py-8 { padding-top: 32px; padding-bottom: 32px; }
+.py-10 { padding-top: 40px; padding-bottom: 40px; }
+.pt-7 { padding-top: 28px; }
+.pt-8 { padding-top: 32px; }
+.pb-6 { padding-bottom: 24px; }
+.p-3 { padding: 12px; }
+.p-6 { padding: 24px; }
+
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-5 { margin-top: 20px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+.ml-auto { margin-left: auto; }
+
+/* === Flex/Grid alignment === */
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.items-baseline { align-items: baseline; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+
+/* === Sizing === */
+.w-full { width: 100%; }
+.w-8 { width: 32px; }
+.w-10 { width: 40px; }
+.h-8 { height: 32px; }
+.h-10 { height: 40px; }
+.min-w-0 { min-width: 0; }
+.min-h-screen { min-height: 100vh; }
+
+/* === Position === */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.inset-0 { inset: 0; }
+.pointer-events-none { pointer-events: none; }
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+
+/* === Typography (utility layer) === */
+.text-sm  { font-size: 14px; }
+.text-base { font-size: 15px; }
+.text-xl  { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-4xl { font-size: 36px; line-height: 1.02; }
+.uppercase { text-transform: uppercase; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.text-center { text-align: center; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leading-tight { line-height: 1.2; }
+
+/* === Opacity === */
+.opacity-40 { opacity: .4; }
+.opacity-60 { opacity: .6; }
+
+/* ===================================================================== */
+/* === §2 Estrutura macro (desktop ≥1280px)                          === */
+/* ===================================================================== */
+
+#app {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+#sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--color-sidebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+}
+
+#sidebar nav { flex: 1; padding: 20px 0; }
+/* NOTE: .nav-item base properties (display, color, font-size, padding, etc.)
+ * live in components.css to avoid specificity conflict with .nav-item.active.
+ * layout.css restricts itself to structural rules only. Do NOT add a descendant
+ * rule here that selects nav-item — its (0,1,0,2) specificity would override
+ * .nav-item.active (0,0,2,0) declared later in components.css by source order,
+ * breaking the active state. */
+
+main {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+#header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 24px 48px;
+  background: var(--color-header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-outline-variant);
+  transition: background-color .3s, border-color .3s;
+}
+
+/* gridOverlay deve cobrir só a área do main, atrás do conteúdo */
+#gridOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .6;
+}
+
+/* sections (.page) recebem padding via classes utility no markup (.px-10 .py-10) */
+
+/* ===================================================================== */
+/* === Min-width guard (desktop only ≥1280px)                        === */
+/* ===================================================================== */
+@media (max-width: 1279px) {
+  body.grain::before {
+    content: "Painel VitaSkin requer tela ≥ 1280px";
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    background: var(--color-bg); color: var(--color-on-surface-muted);
+    font-family: var(--font-label); font-size: 14px; letter-spacing: .12em; text-transform: uppercase;
+    z-index: 9999;
+  }
+}
+
+/* ── Grid utilities ── */
+.col-span-2 { grid-column: span 2 / span 2; }
+.col-span-3 { grid-column: span 3 / span 3; }
+.place-items-center { place-items: center; }
+.mt-6 { margin-top: 24px; }
+
+/* ── Density: compact mode (tweaks panel toggle) ── */
+.compact .vt-table td,
+.compact .vt-table th { padding: 6px 16px; }

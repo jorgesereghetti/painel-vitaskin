@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280">
+  <!-- CSP — restringe origens de script/style/conexão aos domínios do projeto.
+       'unsafe-inline' em style-src é necessário para os estilos dinâmicos do Chart.js.
+       Revise ao adicionar novas dependências externas. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src  'self' https://cdn.jsdelivr.net;
+    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src    'self' https://fonts.gstatic.com;
+    connect-src 'self' https://*.supabase.co;
+    img-src     'self' data: https://*.supabase.co;
+    frame-src   'none';
+    object-src  'none';
+  ">
+  <title>VitaSkin · Painel</title>
+
+  <!-- Google Fonts: Inter, Space Grotesk, Material Symbols Outlined (D-11 — 3 links separados, display=swap, axis completo do Material Symbols) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+
+  <!-- CSS interno em ordem de cascata: variables → base → layout → components -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+
+<body class="grain">
+
+<div id="app" class="flex min-h-screen relative">
+
+  <!-- ============================================================ -->
+  <!-- SIDEBAR                                                      -->
+  <!-- ============================================================ -->
+  <aside id="sidebar" class="flex flex-col">
+
+    <!-- brand block -->
+    <div class="sidebar-brand">
+      <div class="flex items-center gap-3">
+        <span class="brand-mark gradient-bg grid place-items-center font-label">VS</span>
+        <div>
+          <div class="brand-name font-label">VitaSkin</div>
+          <div class="brand-sub font-label">Painel · Jonas</div>
+        </div>
+      </div>
+      <div class="brand-status flex items-center gap-2">
+        <span class="pulse-dot"></span>
+        <span class="font-label">Agente online</span>
+      </div>
+    </div>
+
+    <!-- nav -->
+    <nav class="sidebar-nav flex-1">
+      <a href="#" class="nav-item active" data-tab="dashboard">
+        <span class="bar"></span>
+        <span class="nav-icon material-symbols-outlined">space_dashboard</span>
+        <span class="nav-label flex-1">Dashboard</span>
+        <span class="nav-num font-label">01</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="agenda">
+        <span class="bar"></span>
+        <span class="nav-icon material-symbols-outlined">calendar_month</span>
+        <span class="nav-label flex-1">Agenda</span>
+        <span class="nav-num font-label">02</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="clientes">
+        <span class="bar"></span>
+        <span class="nav-icon material-symbols-outlined">groups</span>
+        <span class="nav-label flex-1">Clientes</span>
+        <span class="nav-num font-label">03</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="agente">
+        <span class="bar"></span>
+        <span class="nav-icon material-symbols-outlined">smart_toy</span>
+        <span class="nav-label flex-1">Agente</span>
+        <span class="nav-num font-label">04</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="logs">
+        <span class="bar"></span>
+        <span class="nav-icon material-symbols-outlined">terminal</span>
+        <span class="nav-label flex-1">Logs</span>
+        <span class="nav-num font-label">05</span>
+      </a>
+    </nav>
+
+    <!-- user box -->
+    <div class="sidebar-user">
+      <div class="flex items-center gap-3">
+        <div class="user-avatar grid place-items-center font-label">RC</div>
+        <div class="flex-1 min-w-0">
+          <div class="user-name">Recepção · VitaSkin</div>
+          <div class="user-role font-label">Recepcionista</div>
+        </div>
+        <!-- Botão Sair oculto: painel sem login no MVP (deploy privado). Reativar quando houver auth. -->
+        <button class="user-logout grid place-items-center" aria-label="Sair" hidden style="display:none">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ============================================================ -->
+  <!-- MAIN                                                         -->
+  <!-- ============================================================ -->
+  <main class="flex-1 min-w-0 relative">
+
+    <!-- ambient orb (decoração de fundo) -->
+    <div class="orb" style="top:-220px; right:-180px; width:640px; height:640px; opacity:.4;"></div>
+
+    <!-- tech grid overlay -->
+    <div id="gridOverlay" class="tech-grid"></div>
+
+    <!-- HEADER -->
+    <header id="header" class="relative">
+      <div class="header-inner flex items-end justify-between gap-8">
+        <div>
+          <div id="tabNum" class="section-num">01</div>
+          <h1 id="tabTitle" class="header-title font-headline">Dashboard</h1>
+          <p id="tabSub" class="header-sub">Métricas em tempo real de agendamentos, leads captados e performance do bot.</p>
+        </div>
+        <div class="header-actions flex items-center gap-3">
+          <div class="glass-panel header-clock flex items-center gap-3">
+            <span class="pulse-dot"></span>
+            <div>
+              <div class="clock-label font-label">Agora</div>
+              <!-- D-06: string estática hardcoded; relógio ao vivo entra na Phase 2 (INFRA-04) -->
+              <div id="liveClock" class="clock-time font-label">14:32</div>
+            </div>
+          </div>
+          <button id="refreshBtn" class="header-btn grid place-items-center" aria-label="Atualizar">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+          <button id="themeToggleBtn" class="header-btn grid place-items-center" aria-label="Alternar Tema" title="Alternar visual claro/escuro">
+            <span class="material-symbols-outlined" id="themeToggleIcon">light_mode</span>
+          </button>
+          <button id="notifBtn" class="header-btn grid place-items-center" aria-label="Notificações">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="notif-dot"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- SECTION · DASHBOARD                                          -->
+    <!-- ============================================================ -->
+    <section data-page="dashboard" class="page active relative">
+
+      <!-- Filtro de período rápido (Pilar 4, item 2) -->
+      <div class="flex items-center justify-between mb-4" style="margin-top: -4px;">
+        <div style="font-family: var(--font-label); font-size: 10px; letter-spacing: 0.15em; color: rgba(var(--color-on-surface-rgb), 0.40); text-transform: uppercase;">
+          Resumo Operacional
+        </div>
+        <div class="flex gap-2" id="dashboardPeriodFilter">
+          <button class="seg-btn active" data-period="mes" style="font-size: 10px; padding: 6px 12px; height: auto;">Este Mês</button>
+          <button class="seg-btn" data-period="semana" style="font-size: 10px; padding: 6px 12px; height: auto;">Esta Semana</button>
+          <button class="seg-btn" data-period="hoje" style="font-size: 10px; padding: 6px 12px; height: auto;">Hoje</button>
+        </div>
+      </div>
+
+      <!-- 4 metric cards com layout assimétrico (2:1:1:1) e grid de 5 colunas -->
+      <div class="grid grid-cols-5 gap-4">
+        <div class="card metric-card col-span-2" style="background: var(--color-highlight-bg); border-color: var(--color-highlight-border);">
+          <div class="flex items-start justify-between">
+            <div class="metric-label" style="color: var(--color-primary); opacity: 0.90;">Agendamentos hoje</div>
+            <span class="metric-icon grid place-items-center" style="background: var(--color-highlight-icon-bg); color: var(--color-primary); box-shadow: 0 0 12px var(--color-highlight-shadow);"><span class="material-symbols-outlined">event_available</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val" style="font-size: 42px; color: var(--color-on-surface); text-shadow: 0 0 20px var(--color-highlight-shadow);">—</span>
+            <span class="metric-unit font-label" style="color: var(--color-primary); opacity: 0.60;">total</span>
+          </div>
+        </div>
+        <div class="card metric-card col-span-1">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Novos leads · semana</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">person_add</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">7 dias</span>
+          </div>
+        </div>
+        <div class="card metric-card col-span-1">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Taxa de conversão</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">bolt</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">mês</span>
+          </div>
+        </div>
+        <div class="card metric-card col-span-1">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Show rate</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">task_alt</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">mês</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- charts row: weekly + specialty -->
+      <div class="grid grid-cols-3 gap-4 mt-6">
+        <div class="card chart-card col-span-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="chip font-label">Agendamentos</div>
+              <h3 class="chart-title font-headline">Últimas 6 semanas</h3>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="weeklyCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="chip font-label">Especialidade</div>
+          <h3 class="chart-title font-headline">Distribuição</h3>
+          <div class="chart-body chart-body-sm">
+            <canvas id="specialtyCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- funnel + follow-ups -->
+      <div class="grid grid-cols-1 gap-4 mt-6">
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="chip font-label">Funil de conversão</div>
+              <h3 class="chart-title font-headline">Lead → Realizado</h3>
+            </div>
+          </div>
+          <!-- 4 etapas vazias — só labels (Phase 6 popula) -->
+          <div id="funnel" class="funnel">
+            <div class="funnel-stage">
+              <div class="flex items-baseline justify-between">
+                <span class="font-headline">Leads</span>
+                <span class="metric-val funnel-count">—</span>
+              </div>
+              <div class="funnel-bar"></div>
+            </div>
+            <div class="funnel-stage">
+              <div class="flex items-baseline justify-between">
+                <span class="font-headline">Agendados</span>
+                <span class="metric-val funnel-count">—</span>
+              </div>
+              <div class="funnel-bar"></div>
+            </div>
+            <div class="funnel-stage">
+              <div class="flex items-baseline justify-between">
+                <span class="font-headline">Confirmados</span>
+                <span class="metric-val funnel-count">—</span>
+              </div>
+              <div class="funnel-bar"></div>
+            </div>
+            <div class="funnel-stage">
+              <div class="flex items-baseline justify-between">
+                <span class="font-headline">Realizados</span>
+                <span class="metric-val funnel-count">—</span>
+              </div>
+              <div class="funnel-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECTION · AGENDA                                             -->
+    <!-- ============================================================ -->
+    <section data-page="agenda" class="page relative">
+
+      <div class="card controls-card">
+        <div class="flex items-end justify-between gap-6">
+          <div class="flex items-end gap-5">
+            <div>
+              <div class="metric-label">Médico</div>
+              <!-- vazio — Phase 4 popula dinamicamente a partir de fetchMedicos() (CONTEXT <deferred>) -->
+              <div id="medicoFilters" class="flex gap-2">
+                <button class="seg-btn active">Todos</button>
+              </div>
+            </div>
+            <div>
+              <div class="metric-label">Status</div>
+              <div id="statusFilters" class="flex gap-2">
+                <button class="seg-btn active" data-status="todos">Todos</button>
+                <button class="seg-btn" data-status="agendado">Agendado</button>
+                <button class="seg-btn" data-status="confirmado">Confirmado</button>
+                <button class="seg-btn" data-status="realizado">Realizado</button>
+                <button class="seg-btn" data-status="falta">Falta</button>
+                <button class="seg-btn" data-status="cancelado">Cancelado</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="occupancy">
+            <div class="flex items-baseline justify-between">
+              <div class="metric-label">Ocupação · hoje</div>
+              <div id="ocupacaoText" class="font-label occupancy-text">—/— · —%</div>
+            </div>
+            <div class="occupancy-bar">
+              <div class="occupancy-fill gradient-bg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- table -->
+      <div class="card vt-table-wrap mt-6">
+        <table class="vt-table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Paciente</th>
+              <th>Médico</th>
+              <th>Status</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody id="agendaBody"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECTION · CLIENTES (UNIFICADA)                               -->
+    <!-- ============================================================ -->
+    <section data-page="clientes" class="page relative">
+
+      <!-- Controle Segmentado Premium (Sub-abas Leads vs Pacientes) -->
+      <div class="card" style="padding: 10px 16px; margin-bottom: 20px;">
+        <div class="flex items-center justify-between">
+          <div class="segmented-control">
+            <button class="seg-option active" data-subtab="leads">
+              <span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">target</span>Funil de Leads
+            </button>
+            <button class="seg-option" data-subtab="pacientes">
+              <span class="material-symbols-outlined" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">groups</span>Base de Pacientes
+            </button>
+          </div>
+          <div id="clientes-header-support" class="flex items-center gap-3">
+            <!-- Espaço dinâmico -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPAINEL 1: LEADS -->
+      <div id="subpanel-leads" class="subpanel">
+        <!-- Grid Superior: Funil Horizontal (col-span-2) + Follow-ups Pendentes (col-span-1) -->
+        <div class="grid grid-cols-3 gap-4">
+          <!-- Funil horizontal -->
+          <div class="card leads-funnel col-span-2" style="margin-top: 0;">
+            <div class="chip font-label">Funil de leads</div>
+            <h3 class="chart-title font-headline">Captação → Conversão</h3>
+            <div class="leads-funnel-grid grid grid-cols-4 gap-4">
+              <div class="leads-funnel-stage">
+                <div class="metric-label">Captados</div>
+                <div class="metric-val">—</div>
+                <div class="funnel-conversion-rate" style="font-family:var(--font-label);font-size:9px;color:rgba(var(--color-on-surface-rgb),.30);margin-top:4px;letter-spacing:.05em;">Base Total</div>
+              </div>
+              <div class="leads-funnel-stage">
+                <div class="metric-label">Qualificados</div>
+                <div class="metric-val">—</div>
+                <div class="funnel-conversion-rate" style="font-family:var(--font-label);font-size:9px;color:rgba(var(--color-on-surface-rgb),.30);margin-top:4px;letter-spacing:.05em;">—</div>
+              </div>
+              <div class="leads-funnel-stage">
+                <div class="metric-label">Agendados</div>
+                <div class="metric-val">—</div>
+                <div class="funnel-conversion-rate" style="font-family:var(--font-label);font-size:9px;color:rgba(var(--color-on-surface-rgb),.30);margin-top:4px;letter-spacing:.05em;">—</div>
+              </div>
+              <div class="leads-funnel-stage">
+                <div class="metric-label">Convertidos</div>
+                <div class="metric-val">—</div>
+                <div class="funnel-conversion-rate" style="font-family:var(--font-label);font-size:9px;color:rgba(var(--color-on-surface-rgb),.30);margin-top:4px;letter-spacing:.05em;">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Follow-ups Pendentes integrado -->
+          <div class="card followups-card" style="margin-top: 0;">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="chip font-label">Follow-ups</div>
+                <h3 class="chart-title font-headline">Pendentes</h3>
+              </div>
+              <span class="metric-val followups-total">—</span>
+            </div>
+            <div class="followups-list" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div class="followup-row flex items-center justify-between" style="padding: 4px 0;">
+                <div class="flex items-center gap-2">
+                  <span class="followup-tag grid place-items-center font-label" style="width: 20px; height: 20px; font-size: 9px;">T1</span>
+                  <div>
+                    <div class="followup-title" style="font-size: 11px;">Tentativa 1</div>
+                  </div>
+                </div>
+                <span class="metric-val followup-count" style="font-size: 13px;">—</span>
+              </div>
+              <div class="followup-row flex items-center justify-between" style="padding: 4px 0;">
+                <div class="flex items-center gap-2">
+                  <span class="followup-tag grid place-items-center font-label" style="width: 20px; height: 20px; font-size: 9px;">T2</span>
+                  <div>
+                    <div class="followup-title" style="font-size: 11px;">Tentativa 2</div>
+                  </div>
+                </div>
+                <span class="metric-val followup-count" style="font-size: 13px;">—</span>
+              </div>
+              <div class="followup-row flex items-center justify-between" style="padding: 4px 0;">
+                <div class="flex items-center gap-2">
+                  <span class="followup-tag grid place-items-center font-label" style="width: 20px; height: 20px; font-size: 9px;">T3</span>
+                  <div>
+                    <div class="followup-title" style="font-size: 11px;">Tentativa 3</div>
+                  </div>
+                </div>
+                <span class="metric-val followup-count" style="font-size: 13px;">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela de Leads -->
+        <div class="card vt-table-wrap mt-6">
+          <div class="vt-table-header flex items-center justify-between">
+            <div>
+              <div class="chip font-label">Base de leads</div>
+              <h3 class="chart-title font-headline">Acompanhamento</h3>
+            </div>
+            <div id="leadsFilters" class="flex gap-2">
+              <button class="seg-btn active" data-status="todos">Todos</button>
+              <button class="seg-btn" data-status="pendente">Pendente</button>
+              <button class="seg-btn" data-status="respondido">Respondido</button>
+              <button class="seg-btn" data-status="encerrado">Encerrado</button>
+            </div>
+          </div>
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Origem</th>
+                <th>Última intenção</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="leadsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBPAINEL 2: PACIENTES -->
+      <div id="subpanel-pacientes" class="subpanel hidden">
+        <div class="card vt-table-wrap" style="margin-top: 0;">
+          <div class="vt-table-header flex items-center justify-between">
+            <div>
+              <div class="chip font-label">Base de pacientes</div>
+              <h3 class="chart-title font-headline">Consulta e histórico</h3>
+            </div>
+            <div class="relative" style="max-width: 360px; width: 100%;">
+              <span class="material-symbols-outlined absolute"
+                    style="left:12px; top:50%; transform:translateY(-50%); color:var(--color-outline);">search</span>
+              <input id="patientSearch"
+                     type="text"
+                     placeholder="Buscar por nome ou telefone"
+                     class="field-i w-full">
+            </div>
+          </div>
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Origem</th>
+                <th>Última visita</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="patientsBody"></tbody>
+          </table>
+          
+          <div id="patientsEmpty" class="empty-state hidden grid place-items-center">
+            <span class="empty-icon grid place-items-center">
+              <span class="material-symbols-outlined">search_off</span>
+            </span>
+            <div class="empty-title font-headline">Nenhum paciente encontrado</div>
+            <div class="empty-sub">Ajuste a busca ou aguarde novos cadastros</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECTION · AGENTE                                             -->
+    <!-- ============================================================ -->
+    <section data-page="agente" class="page relative">
+
+      <!-- 3 metric cards do bot -->
+      <div class="grid grid-cols-3 gap-4">
+        <div class="card metric-card">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Mensagens hoje</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">chat</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">total</span>
+          </div>
+        </div>
+        <div class="card metric-card">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Cadastros via bot</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">how_to_reg</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">7 dias</span>
+          </div>
+        </div>
+        <div class="card metric-card">
+          <div class="flex items-start justify-between">
+            <div class="metric-label">Agendamentos via bot</div>
+            <span class="metric-icon grid place-items-center"><span class="material-symbols-outlined">event_note</span></span>
+          </div>
+          <div class="metric-row flex items-baseline gap-2">
+            <span class="metric-val">—</span>
+            <span class="metric-unit font-label">7 dias</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- intent donut + conversation log -->
+      <div class="grid grid-cols-5 gap-4 mt-6">
+        <div class="card chart-card col-span-2">
+          <div class="chip font-label">Intenções detectadas</div>
+          <h3 class="chart-title font-headline">Últimos 30 dias</h3>
+          <div class="chart-body chart-body-sm">
+            <canvas id="intentCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="card conv-card col-span-3">
+          <div class="vt-table-header flex items-center justify-between">
+            <div>
+              <div class="chip font-label">Conversas · ao vivo</div>
+              <h3 class="chart-title font-headline">Log em tempo real</h3>
+            </div>
+            <div id="botStatusBadge" class="conv-streaming flex items-center gap-2 font-label" style="padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid rgba(60, 223, 255, 0.15); background: rgba(60, 223, 255, 0.05); color: var(--color-primary); transition: all .3s;">
+              <span id="botStatusDot" class="pulse-dot" style="background-color: var(--color-primary); transition: all .3s;"></span>
+              <span id="botStatusText" style="text-transform: uppercase; letter-spacing: 0.05em;">ATIVO</span>
+            </div>
+          </div>
+          <div id="convLog" class="conv-log"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- LOGS DE AUDITORIA                                            -->
+    <!-- ============================================================ -->
+    <section data-page="logs" class="page relative">
+      <div class="card controls-card flex items-end justify-between" style="padding: 16px 24px; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
+        <!-- Filters -->
+        <div class="flex items-end gap-5 flex-wrap">
+          <div class="flex flex-col gap-2">
+            <div class="metric-label">Pesquisa</div>
+            <div class="relative flex items-center" style="width: 240px;">
+              <span class="material-symbols-outlined absolute" style="left: 12px; font-size: 18px; color: rgba(var(--color-on-surface-rgb), 0.45); top: 50%; transform: translateY(-50%); pointer-events: none;">search</span>
+              <input type="text" id="logSearch" class="field-i" placeholder="Filtrar por mensagem..." style="padding-left: 36px; height: 32px; border-radius: var(--radius-sm);">
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <div class="metric-label">Severidade</div>
+            <div class="segmented-control" id="logSeverityFilters">
+              <button class="seg-option active" data-level="ALL">Todos</button>
+              <button class="seg-option" data-level="INFO">Info</button>
+              <button class="seg-option" data-level="WARN">Aviso</button>
+              <button class="seg-option" data-level="ERROR">Erro</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="flex gap-3">
+          <button id="btnCopyLogsPage" class="seg-btn" style="height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;">
+            <span class="material-symbols-outlined" style="font-size: 15px;">content_copy</span> Copiar logs
+          </button>
+          <button id="btnClearLogsPage" class="seg-btn" style="height: 32px; color: #f28b82; border-color: rgba(242, 139, 130, 0.25); display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;">
+            <span class="material-symbols-outlined" style="font-size: 15px;">delete</span> Limpar logs
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <div class="flex items-center justify-between" style="margin-bottom: 16px; border-bottom: 1px solid var(--color-outline-variant); padding-bottom: 12px;">
+          <div class="font-headline" style="font-size: 16px; font-weight: 600; color: var(--color-on-surface);">Console de Eventos</div>
+          <span class="chip font-label" id="logCountBadge">0 Eventos</span>
+        </div>
+        
+        <!-- Logs list container -->
+        <div id="logsPageContainer" style="background: rgba(30, 30, 29, 0.45); border: 1px solid var(--color-outline-variant); border-radius: var(--radius-xl); padding: 18px; font-family: 'Space Grotesk', monospace; font-size: 11px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; min-height: 200px;">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção Pacientes removida (unificada sob Clientes) -->
+
+  </main>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- SIDE PANEL (Phase 2 injeta conteúdo via openSide(html))      -->
+<!-- ============================================================ -->
+<div id="sideBack" class="side-back"></div>
+<aside id="sidePanel" class="side-panel"></aside>
+
+<!-- ============================================================ -->
+<!-- TWEAKS PANEL (placeholder — Phase 6 wire)                    -->
+<!-- ============================================================ -->
+<div id="tweaks" class="tweak-panel hidden-t">
+  <div class="flex items-center justify-between">
+    <div class="chip font-label">Tweaks · dev</div>
+    <span class="font-label tweaks-status">Live</span>
+  </div>
+  <div class="tweaks-body">
+    <label class="flex items-center justify-between">
+      <span class="font-label">Grid de fundo</span>
+      <input id="tweak-grid" type="checkbox" checked>
+    </label>
+    <label class="flex items-center justify-between">
+      <span class="font-label">Mostrar empty state</span>
+      <input id="tweak-empty" type="checkbox">
+    </label>
+    <div>
+      <div class="font-label tweaks-density-label">Densidade</div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="tweak-comfort" class="seg-btn active">Conforto</button>
+        <button id="tweak-compact" class="seg-btn">Compacto</button>
+      </div>
+    </div>
+    <!-- Logs do Sistema — INFRA-LOG UI -->
+    <div style="margin-top: 18px; border-top: 1px solid rgba(61,74,65,.12); padding-top: 12px;">
+      <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+        <span class="font-label" style="font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;">Logs do Sistema</span>
+        <div class="flex gap-2">
+          <button id="tweak-copy-logs" class="seg-btn" style="padding: 2px 6px; font-size: 10px;" title="Copiar logs formatados para clipboard">Copiar</button>
+          <button id="tweak-clear-logs" class="seg-btn" style="padding: 2px 6px; font-size: 10px; color: #f28b82;" title="Limpar logs locais">Limpar</button>
+        </div>
+      </div>
+      <div id="tweak-logs-console" style="background: rgba(30,30,29,.6); border: 1px solid rgba(61,74,65,.12); border-radius: var(--radius); padding: 8px; font-family: 'Space Grotesk', monospace; font-size: 10px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: thin;">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DEPENDÊNCIAS EXTERNAS (CDN — zero-build)                     -->
+<!-- ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<!-- ============================================================ -->
+<!-- APLICAÇÃO — ordem importa                                    -->
+<!-- config → logger → supabase → utils → router → data → charts   -->
+<!-- ============================================================ -->
+<script src="js/config.local.js"></script>
+<script src="js/config.js"></script>
+<script src="js/logger.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/router.js"></script>
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/agenda.js"></script>
+<script src="js/pages/clientes.js"></script>
+<script src="js/pages/agente.js"></script>
+<script src="js/pages/logs.js"></script>
+<script src="js/app.js"></script>
+<script src="js/tweaks.js"></script>
+
+</body>
+</html>
